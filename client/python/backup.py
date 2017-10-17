@@ -22,8 +22,11 @@ def traverseAllFile(rootPath, backUpspaceFolder, originalPath):
     if rootPath.startswith(backUpspaceFolderflag):
         return;
     for i in os.listdir(rootPath):
+        if i in blacklist:
+            continue;
         filepath = os.path.join(rootPath, i);
         if isDestFile(filepath):
+
             childFilePath = filepath.split(originalPath);
             if len(childFilePath) != 2:
                 print 'dosomething is wrong in childFilePath:' + childFilePath;
@@ -60,6 +63,7 @@ def isDestFile(path):
 if __name__ == '__main__':
     global fileType;
     global backUpspaceFolderflag;
+    global blacklist;
     num = 0;
     configFile = None;
     timeStep = 3600;
@@ -67,13 +71,14 @@ if __name__ == '__main__':
     try:
         configFile = io.open(os.path.join(os.getcwd(), 'backup.config'),mode="r", encoding="utf-8");
         content = configFile.read();
-        print content;
         jsonObj = json.loads(content.replace('\r\n', '\\r\\n'),encoding="utf-8");
         WorkspaceFolder = os.path.abspath(jsonObj["rootpath"]);
         backUpspaceFolder = os.path.abspath(jsonObj["destpath"]);
         fileType = jsonObj["fileType"];
         timeStep = jsonObj["cycleTime"] * 3600;
         loop = jsonObj["loop"];
+        blacklist=jsonObj["blackList"];
+
     except IOError:
         print 'can not load config'
         sys.exit()
