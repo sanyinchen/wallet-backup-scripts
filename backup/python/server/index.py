@@ -40,7 +40,8 @@ class index:
 
         print 'storage file:' + path;
         fout = open(path, 'w')
-        fout.write(i.file)
+        fout.write(i.file.decode("utf-8").encode("ISO-8859-1"))
+        #fout.write(i.file)
         fout.close()
         # print 'pos-receive:' + i.to;
         return 200

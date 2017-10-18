@@ -64,9 +64,9 @@ class PostHandler(urllib2.BaseHandler):
             buffer += 'Content-Type: %s\r\n' % contenttype
             # buffer += 'Content-Length: %s\r\n' % file_size
             fd.seek(0)
-            buffer += '\r\n' + fd.read() + '\r\n'
+            buffer += '\r\n' + fd.read().decode("ISO-8859-1") + '\r\n'
         buffer += '--%s--\r\n\r\n' % boundary
-        return boundary, buffer
+        return boundary, buffer.encode("utf-8")
 
     multipart_encode = Callable(multipart_encode)
 
@@ -82,7 +82,7 @@ def uploadFile(filepath, remotepath, config):
 
     opener = urllib2.build_opener(PostHandler)
     params = {"to": remotepath, "sign": sign,
-              "file": open(filepath, "rb")}
+              "file": open(filepath, "r")}
     code = opener.open(config["remoteServer"], params).read()
     if code == successCode:
         print "remote back up successed"
