@@ -1,12 +1,13 @@
 #!/usr/bin/python
 # -*- coding:utf-8 -*-
 
-import os, sys, shutil, json, time,io
+import os, sys, shutil, json, time, io, upload
 
 
-def main(workspaceFolder, backUpspaceFolder):
-    backUpspaceFolder = os.path.join(backUpspaceFolder,
-                                     time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime(time.time())));
+def main(workspaceFolder, backUpspaceFolder, remotePath):
+    childFolder = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime(time.time()));
+    backUpspaceFolder = os.path.join(backUpspaceFolder, childFolder);
+    remotePath = os.path.join(remotePath, childFolder);
     if os.path.exists(backUpspaceFolder) == False:
         os.makedirs(backUpspaceFolder)
     else:
@@ -15,10 +16,11 @@ def main(workspaceFolder, backUpspaceFolder):
 
     print 'rootpath:' + workspaceFolder;
     print 'backpath:' + backUpspaceFolder;
-    traverseAllFile(workspaceFolder, backUpspaceFolder, workspaceFolder)
+    print "remotepath:" + remotePath;
+    traverseAllFile(workspaceFolder, backUpspaceFolder, workspaceFolder, remotePath)
 
 
-def traverseAllFile(rootPath, backUpspaceFolder, originalPath):
+def traverseAllFile(rootPath, backUpspaceFolder, originalPath, remotePath):
     if rootPath.startswith(backUpspaceFolderflag):
         return;
     for i in os.listdir(rootPath):
@@ -31,17 +33,19 @@ def traverseAllFile(rootPath, backUpspaceFolder, originalPath):
             if len(childFilePath) != 2:
                 print 'dosomething is wrong in childFilePath:' + childFilePath;
                 sys.exit();
-
-            backUpFilePath = os.path.join(backUpspaceFolder, getPathWithoutSeparate(childFilePath[1]));
+            childFileName = getPathWithoutSeparate(childFilePath[1]);
+            backUpFilePath = os.path.join(backUpspaceFolder, childFileName);
+            remotePathFile = os.path.join(remotePath, childFileName);
             backDirpath = os.path.dirname(backUpFilePath);
             if os.path.exists(backDirpath) == False:
                 os.makedirs(backDirpath)
 
             shutil.copy(filepath, backUpFilePath);
+            upload.uploadFile(filepath, remotePathFile, config);
             print 'backup file:' + filepath + ' to ' + backUpFilePath;
 
         if os.path.isdir(filepath):
-            traverseAllFile(filepath, backUpspaceFolder, originalPath)
+            traverseAllFile(filepath, backUpspaceFolder, originalPath, remotePath)
 
 
 def getPathWithoutSeparate(path):
@@ -64,20 +68,23 @@ if __name__ == '__main__':
     global fileType;
     global backUpspaceFolderflag;
     global blacklist;
+    global config;
     num = 0;
     configFile = None;
     timeStep = 3600;
     loop = 0;
     try:
-        configFile = io.open(os.path.join(os.getcwd(), 'backup.config'),mode="r", encoding="utf-8");
+        configFile = io.open(os.path.join(os.getcwd(), 'backup.config'), mode="r", encoding="utf-8");
         content = configFile.read();
-        jsonObj = json.loads(content.replace('\r\n', '\\r\\n'),encoding="utf-8");
-        WorkspaceFolder = os.path.abspath(jsonObj["rootpath"]);
-        backUpspaceFolder = os.path.abspath(jsonObj["destpath"]);
-        fileType = jsonObj["fileType"];
-        timeStep = jsonObj["cycleTime"] * 3600;
-        loop = jsonObj["loop"];
-        blacklist=jsonObj["blackList"];
+        config = json.loads(content.replace('\r\n', '\\r\\n'), encoding="utf-8");
+
+        WorkspaceFolder = os.path.abspath(config["rootpath"]);
+        backUpspaceFolder = os.path.abspath(config["destpath"]);
+        remotePath = os.path.abspath(config["remotepath"]);
+        fileType = config["fileType"];
+        timeStep = config["cycleTime"] * 3600;
+        loop = config["loop"];
+        blacklist = config["blackList"];
 
     except IOError:
         print 'can not load config'
@@ -96,7 +103,7 @@ if __name__ == '__main__':
         num = num + 1;
         if loop > 0:
             print '--------------------the ' + str(num) + ' times of backup---------------------'
-        main(WorkspaceFolder, backUpspaceFolder)
+        main(WorkspaceFolder, backUpspaceFolder, remotePath)
         if loop > 0:
             print 'next back up is after ' + str(timeStep) + ' s';
             time.sleep(timeStep)
