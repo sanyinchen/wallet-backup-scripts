@@ -3,7 +3,8 @@
 
 import errno
 import os, sys
-import web, io, json
+import web, io, json,hashlib, time;
+
 
 urls = (
     '/', 'index'
@@ -21,11 +22,13 @@ class index:
         configFile = io.open(os.path.join(os.getcwd(), 'server.config'), mode="r", encoding="utf-8");
         content = configFile.read();
         config = json.loads(content.replace('\r\n', '\\r\\n'), encoding="utf-8");
-        localSign = hash(config["username"] + config["passport"] + offset);
-        print "localSign:" + str(localSign)
+
 
         i = web.input()
+        localSign = hashlib.md5(config["username"] + config["passport"] + offset+i.ticks).hexdigest();
+        print "localSign:" + str(localSign)
         print "sign:" + i.sign
+
         path = i.to;
         if str(localSign) != i.sign:
             print "illegal upload"

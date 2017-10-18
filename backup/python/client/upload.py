@@ -4,7 +4,7 @@
 import urllib
 import urllib2
 import mimetools, mimetypes
-import os, stat
+import os, stat, hashlib, time;
 
 
 class Callable:
@@ -78,10 +78,11 @@ def uploadFile(filepath, remotepath, config):
         return
     offset = "10086";
     successCode = "200";
-    sign = hash(config["username"] + config["passport"] + offset);
-
+    ticks = str(time.time());
+    sign = hashlib.md5(config["username"] + config["passport"] + offset + ticks).hexdigest();
+    print 'sign:'+str(sign);
     opener = urllib2.build_opener(PostHandler)
-    params = {"to": remotepath, "sign": sign,
+    params = {"to": remotepath, "sign": str(sign), "ticks": ticks,
               "file": open(filepath, "r")}
     code = opener.open(config["remoteServer"], params).read()
     if code == successCode:
