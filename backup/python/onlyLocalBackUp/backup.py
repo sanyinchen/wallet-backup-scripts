@@ -1,14 +1,13 @@
 #!/usr/bin/python
 # -*- coding:utf-8 -*-
 
-import os, sys, shutil, json, time, io, upload
+import os, sys, shutil, json, time, io
 
 
-
-def main(workspaceFolder, backUpspaceFolder, remotePath):
+def main(workspaceFolder, backUpspaceFolder):
     childFolder = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime(time.time()));
     backUpspaceFolder = os.path.join(backUpspaceFolder, childFolder);
-    remotePath = remotePath + '/' + childFolder;
+
     if os.path.exists(backUpspaceFolder) == False:
         os.makedirs(backUpspaceFolder)
     else:
@@ -17,11 +16,11 @@ def main(workspaceFolder, backUpspaceFolder, remotePath):
 
     print 'rootpath:' + workspaceFolder;
     print 'backpath:' + backUpspaceFolder;
-    print "remotepath:" + remotePath;
-    traverseAllFile(workspaceFolder, backUpspaceFolder, workspaceFolder, remotePath)
+
+    traverseAllFile(workspaceFolder, backUpspaceFolder, workspaceFolder)
 
 
-def traverseAllFile(rootPath, backUpspaceFolder, originalPath, remotePath):
+def traverseAllFile(rootPath, backUpspaceFolder, originalPath):
     if rootPath.startswith(backUpspaceFolderflag):
         return;
     for i in os.listdir(rootPath):
@@ -36,16 +35,12 @@ def traverseAllFile(rootPath, backUpspaceFolder, originalPath, remotePath):
                 sys.exit();
             childFileName = getPathWithoutSeparate(childFilePath[1]);
             backUpFilePath = os.path.join(backUpspaceFolder, childFileName);
-            remotePathFile = remotePath + '/' + childFileName
             backDirpath = os.path.dirname(backUpFilePath);
             if os.path.exists(backDirpath) == False:
                 os.makedirs(backDirpath)
 
             shutil.copy(filepath, backUpFilePath);
             print 'backup file:' + filepath + ' to ' + backUpFilePath;
-            if config["remoteSwitch"] != 1:
-                continue
-            upload.uploadFile(filepath, remotePathFile.replace('\\', '/'), config);
 
         if os.path.isdir(filepath):
             traverseAllFile(filepath, backUpspaceFolder, originalPath, remotePath)
@@ -83,7 +78,6 @@ if __name__ == '__main__':
 
         WorkspaceFolder = os.path.abspath(config["rootpath"]);
         backUpspaceFolder = os.path.abspath(config["destpath"]);
-        remotePath = config["remotepath"];
         fileType = config["fileType"];
         timeStep = config["cycleTime"] * 3600;
         loop = config["loop"];
@@ -106,7 +100,7 @@ if __name__ == '__main__':
         num = num + 1;
         if loop > 0:
             print '--------------------the ' + str(num) + ' times of backup---------------------'
-        main(WorkspaceFolder, backUpspaceFolder, remotePath)
+        main(WorkspaceFolder, backUpspaceFolder)
         if loop > 0:
             print 'next back up is after ' + str(timeStep) + ' s';
             time.sleep(timeStep)

@@ -2,9 +2,8 @@
 # -*- coding:utf-8 -*-
 
 import errno
-import os, sys
-import web, io, json,hashlib, time;
-
+import os, sys, codecs
+import web, io, json, hashlib, time;
 
 urls = (
     '/', 'index'
@@ -23,11 +22,10 @@ class index:
         content = configFile.read();
         config = json.loads(content.replace('\r\n', '\\r\\n'), encoding="utf-8");
 
-
         i = web.input()
-        localSign = hashlib.md5(config["username"] + config["passport"] + offset+i.ticks).hexdigest();
-        print "localSign:" + str(localSign)
-        print "sign:" + i.sign
+        localSign = hashlib.md5(config["username"] + config["passport"] + offset + i.ticks).hexdigest();
+
+        print "----------------------------------------------------------"
 
         path = i.to;
         if str(localSign) != i.sign:
@@ -42,16 +40,21 @@ class index:
             self.mkdir_p(_dir)
 
         print 'storage file:' + path;
-        fout = open(path, 'w')
-        fout.write(i.file.decode("utf-8").encode("ISO-8859-1"))
-        #fout.write(i.file)
+
+        with open(path, 'wb') as fout:
+            fout.write(i.file)
+        # fout.write(i.file)
         fout.close()
+        with open(path, 'rb') as md5File:
+            md5obj = hashlib.md5()
+            md5obj.update(md5File.read())
+            hash = md5obj.hexdigest()
+            print "storage file's md5:" + hash;
         # print 'pos-receive:' + i.to;
         return 200
 
     def mkdir_p(self, path):
         try:
-            print "path" + path
             os.makedirs(path)
         except OSError as exc:  # Python >2.5 (except OSError, exc: for Python <2.5)
             if exc.errno == errno.EEXIST and os.path.isdir(path):
